@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>封面排版</title>
+<link rel="stylesheet" href="./assets/style.css">
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div>
+      <h1>封面排版</h1>
+      <div class="en">Cover Layout</div>
+      <div class="desc">为小红书制作 3:4 图文封面</div>
+    </div>
+    <div class="local">仅本地处理</div>
+  </header>
+
+  <main>
+    <section class="preview-section">
+      <div class="preview-head"><strong>预览</strong><span>1800 × 2400 px</span></div>
+      <div class="canvas-shell">
+        <canvas id="preview" width="900" height="1200" aria-label="拼贴预览"></canvas>
+      </div>
+      <div id="adjustBar" class="adjust-bar hidden">
+        <span id="adjustLabel">正在调整</span>
+        <button id="finishAdjust" type="button">完成调整</button>
+      </div>
+      <div class="hint">点“调整构图/位置”后，在预览中拖动；图片支持双指缩放。</div>
+      <img id="exportPreview" class="export-preview hidden" alt="导出预览">
+    </section>
+
+    <section class="panel">
+      <div class="section-title"><h2>布局</h2><span>Layout</span></div>
+      <div id="layoutCounts" class="layout-counts" aria-label="选择格数"></div>
+      <div id="layoutChoices" class="layout-choices" aria-label="选择构图"></div>
+      <div id="ratioControl" class="control">
+        <label>主区域比例 <output id="ratioOut">50%</output></label>
+        <input id="ratio" type="range" min="30" max="70" value="50">
+      </div>
+      <div id="gridAdjust" class="hidden">
+        <div id="rowAdjust"></div>
+        <div id="colAdjust"></div>
+        <button id="resetGrid" type="button" class="full">重置行列比例</button>
+      </div>
+      <div class="control">
+        <label>外边距 <output id="marginOut">5</output></label>
+        <input id="margin" type="range" min="0" max="45" value="5">
+      </div>
+      <div class="control">
+        <label>框间距 <output id="gapOut">5</output></label>
+        <input id="gap" type="range" min="0" max="45" value="5">
+      </div>
+      <div class="control">
+        <label>圆角 <output id="radiusOut">5</output></label>
+        <input id="radius" type="range" min="0" max="40" value="5">
+      </div>
+      <div class="row">
+        <label for="bg">背景颜色</label>
+        <div class="color-pair">
+          <span class="color-swatch" id="bgSwatch"><input id="bg" type="color" value="#000000" aria-label="背景颜色"></span>
+          <input id="bgHex" class="hex-input" type="text" value="#000000" maxlength="7" spellcheck="false" aria-label="背景颜色色号">
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title"><h2>快捷操作</h2><span>Quick tools</span></div>
+      <label class="file-btn primary">批量选择图片<input id="batchFiles" type="file" accept="image/*" multiple></label>
+      <div class="swap-row">
+        <select id="swapA" aria-label="第一个框"></select>
+        <span>↔</span>
+        <select id="swapB" aria-label="第二个框"></select>
+        <button id="swapBtn" type="button">交换</button>
+      </div>
+      <button id="clearAll" type="button" class="full">清空全部</button>
+    </section>
+
+    <section class="panel">
+      <div class="section-title"><h2>框设置</h2><span>Frames</span></div>
+      <div id="slotsPanel"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title"><h2>叠加文字</h2><span>Overlay text</span></div>
+      <button id="addOverlay" type="button" class="full">添加叠加文字</button>
+      <div id="overlayArrange" class="overlay-arrange hidden">
+        <div class="arrange-head"><span>批量排版</span><span id="overlayArrangeCount">已选 0 条</span></div>
+        <div class="arrange-buttons">
+          <button id="overlayAlignLeft" type="button">左对齐</button>
+          <button id="overlayAlignCenter" type="button">居中对齐</button>
+          <button id="overlayAlignRight" type="button">右对齐</button>
+        </div>
+        <div class="control"><label>文字框间距 <output id="overlaySpacingOut">20 px</output></label><input id="overlaySpacing" type="range" min="0" max="200" value="20"></div>
+        <button id="overlayStack" type="button" class="full">应用纵向排列</button>
+      </div>
+      <div id="overlayPanel"></div>
+    </section>
+
+    <section class="panel font-note">
+      <div class="section-title"><h2>字体</h2><span>Fonts</span></div>
+      <p>中文默认：LXGW Bright。英文默认：Cormorant。字体文件均随小工具离线打包。</p>
+    </section>
+  </main>
+
+  <div class="export-bar">
+    <button id="savePng" type="button" class="primary">保存 PNG</button>
+    <button id="saveJpg" type="button" class="wine">保存 JPG</button>
+    <div id="note" class="note" aria-live="polite"></div>
+  </div>
+</div>
+<script src="./assets/main.js"></script>
+</body>
+</html>

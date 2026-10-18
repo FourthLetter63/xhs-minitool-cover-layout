@@ -1,0 +1,6 @@
+build/
+__pycache__/
+.DS_Store
+*.pyc
+# Downloaded / generated binary fonts belong only in build/
+app/assets/fonts/*.woff2
