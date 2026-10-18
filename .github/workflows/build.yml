@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '20'
       - name: Install font subsetting support
-        run: python -m pip install 'fonttools[woff]'
+        run: python -m pip install 'fonttools[woff]' lxml
       - name: Build and audit offline ZIP
         run: python scripts/build.py
       - name: Upload mini-tool ZIP
