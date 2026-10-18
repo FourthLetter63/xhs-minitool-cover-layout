@@ -213,7 +213,7 @@ function renderSlots(){
   for(var j=0;j<n;j++)bindSlot(j);
 }
 function escapeHtml(t){return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function weightOptions(v){var vals=[400,500,600,700],s='';for(var i=0;i<vals.length;i++)s+='<option value="'+vals[i]+'"'+(vals[i]===v?' selected':'')+'>'+vals[i]+'</option>';return s;}
+function weightOptions(v){var vals=[[400,'Regular'],[500,'Medium'],[600,'Semibold'],[700,'Bold']],s='';for(var i=0;i<vals.length;i++)s+='<option value="'+vals[i][0]+'"'+(vals[i][0]===v?' selected':'')+'>'+vals[i][1]+'</option>';return s;}
 function bindSlot(i){
   var s=slots[i],mode=document.getElementById('mode'+i),file=document.getElementById('file'+i),zoom=document.getElementById('zoom'+i),text=document.getElementById('text'+i),font=document.getElementById('font'+i),weight=document.getElementById('weight'+i),size=document.getElementById('size'+i),line=document.getElementById('line'+i),color=document.getElementById('textColor'+i),hex=document.getElementById('textColor'+i+'Hex'),swatch=document.getElementById('textColor'+i+'Swatch');
   mode.addEventListener('change',function(){s.mode=mode.value;finishAdjust();renderSlots();redraw();});
@@ -253,14 +253,78 @@ function snapshotGesture(){
   if(activeAdjust.kind==='overlay'){var o=overlays[activeAdjust.index];gesture={kind:'overlay',cx:cx,cy:cy,x:o.x,y:o.y};return;}
   var s=slots[activeAdjust.index],dist=0;if(ps.length>=2)dist=Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y);gesture={kind:'slot',mode:s.mode,cx:cx,cy:cy,dx:s.mode==='image'?s.dx:s.textDx,dy:s.mode==='image'?s.dy:s.textDy,zoom:s.zoom,dist:dist};
 }
-canvas.addEventListener('pointerdown',function(e){if(!activeAdjust)return;var p=pointerPoint(e);pointers[e.pointerId]=p;try{canvas.setPointerCapture(e.pointerId);}catch(err){}snapshotGesture();e.preventDefault();});
-canvas.addEventListener('pointermove',function(e){
-  if(!activeAdjust||!pointers[e.pointerId]||!gesture)return;var p=pointerPoint(e);pointers[e.pointerId]=p;var ps=pointerList(),cx=0,cy=0;for(var i=0;i<ps.length;i++){cx+=ps[i].x;cy+=ps[i].y;}cx/=ps.length;cy/=ps.length;var snap=18;
-  if(activeAdjust.kind==='overlay'){var o=overlays[activeAdjust.index],nx=gesture.x+(cx-gesture.cx),ny=gesture.y+(cy-gesture.cy);guideX=Math.abs(nx-W/2)<=snap;guideY=Math.abs(ny-H/2)<=snap;o.x=guideX?W/2:clamp(nx,0,W);o.y=guideY?H/2:clamp(ny,0,H);redraw();e.preventDefault();return;}
-  var s=slots[activeAdjust.index];if(gesture.mode==='image'){s.dx=gesture.dx+(cx-gesture.cx);s.dy=gesture.dy+(cy-gesture.cy);if(ps.length>=2&&gesture.dist>0){var d=Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y);s.zoom=clamp(gesture.zoom*d/gesture.dist,1,3.5);var z=document.getElementById('zoom'+activeAdjust.index),zo=document.getElementById('zoomOut'+activeAdjust.index);if(z)z.value=Math.round(s.zoom*100);if(zo)zo.textContent=Math.round(s.zoom*100)+'%';}guideX=Math.abs(s.dx)<=snap;guideY=Math.abs(s.dy)<=snap;if(guideX)s.dx=0;if(guideY)s.dy=0;clampImage(s,rectsFor(W,H)[activeAdjust.index]);}else{s.textDx=gesture.dx+(cx-gesture.cx);s.textDy=gesture.dy+(cy-gesture.cy);guideX=Math.abs(s.textDx)<=snap;guideY=Math.abs(s.textDy)<=snap;if(guideX)s.textDx=0;if(guideY)s.textDy=0;}redraw();e.preventDefault();
+// Touch gestures are handled separately so the mini-tool WebView cannot
+// interpret vertical image dragging as a request to scroll the page.
+function moveAdjustment(){
+  if(!activeAdjust||!gesture)return;
+  var ps=pointerList();if(!ps.length)return;
+  var cx=0,cy=0;for(var i=0;i<ps.length;i++){cx+=ps[i].x;cy+=ps[i].y;}cx/=ps.length;cy/=ps.length;var snap=18;
+  if(activeAdjust.kind==='overlay'){
+    var o=overlays[activeAdjust.index],nx=gesture.x+(cx-gesture.cx),ny=gesture.y+(cy-gesture.cy);
+    guideX=Math.abs(nx-W/2)<=snap;guideY=Math.abs(ny-H/2)<=snap;
+    o.x=guideX?W/2:clamp(nx,0,W);o.y=guideY?H/2:clamp(ny,0,H);redraw();return;
+  }
+  var s=slots[activeAdjust.index];
+  if(gesture.mode==='image'){
+    s.dx=gesture.dx+(cx-gesture.cx);s.dy=gesture.dy+(cy-gesture.cy);
+    if(ps.length>=2&&gesture.dist>0){
+      var d=Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y);
+      s.zoom=clamp(gesture.zoom*d/gesture.dist,1,3.5);
+      var z=document.getElementById('zoom'+activeAdjust.index),zo=document.getElementById('zoomOut'+activeAdjust.index);
+      if(z)z.value=Math.round(s.zoom*100);if(zo)zo.textContent=Math.round(s.zoom*100)+'%';
+    }
+    guideX=Math.abs(s.dx)<=snap;guideY=Math.abs(s.dy)<=snap;
+    if(guideX)s.dx=0;if(guideY)s.dy=0;
+    clampImage(s,rectsFor(W,H)[activeAdjust.index]);
+  }else{
+    s.textDx=gesture.dx+(cx-gesture.cx);s.textDy=gesture.dy+(cy-gesture.cy);
+    guideX=Math.abs(s.textDx)<=snap;guideY=Math.abs(s.textDy)<=snap;
+    if(guideX)s.textDx=0;if(guideY)s.textDy=0;
+  }
+  redraw();
+}
+canvas.addEventListener('pointerdown',function(e){
+  if(e.pointerType==='touch'||!activeAdjust)return;
+  pointers[e.pointerId]=pointerPoint(e);
+  try{canvas.setPointerCapture(e.pointerId);}catch(err){}
+  snapshotGesture();e.preventDefault();
 });
-function endPointer(e){if(!pointers[e.pointerId])return;delete pointers[e.pointerId];guideX=false;guideY=false;snapshotGesture();redraw();}
-canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('lostpointercapture',endPointer);
+canvas.addEventListener('pointermove',function(e){
+  if(e.pointerType==='touch'||!activeAdjust||!pointers[e.pointerId])return;
+  pointers[e.pointerId]=pointerPoint(e);moveAdjustment();e.preventDefault();
+});
+function endPointer(e){
+  if(e.pointerType==='touch'||!pointers[e.pointerId])return;
+  delete pointers[e.pointerId];guideX=false;guideY=false;snapshotGesture();redraw();
+}
+canvas.addEventListener('pointerup',endPointer);
+canvas.addEventListener('pointercancel',endPointer);
+canvas.addEventListener('lostpointercapture',endPointer);
+function syncTouchPoints(e){
+  // Every active finger is tracked by identifier; this supports drag and pinch.
+  for(var k in pointers)if(Object.prototype.hasOwnProperty.call(pointers,k)&&k.charAt(0)==='t')delete pointers[k];
+  for(var i=0;i<e.targetTouches.length;i++){
+    var t=e.targetTouches[i],r=canvas.getBoundingClientRect();
+    pointers['t'+t.identifier]={x:(t.clientX-r.left)*W/r.width,y:(t.clientY-r.top)*H/r.height};
+  }
+}
+canvas.addEventListener('touchstart',function(e){
+  if(!activeAdjust)return;
+  syncTouchPoints(e);snapshotGesture();
+  if(e.cancelable)e.preventDefault();
+},{passive:false});
+canvas.addEventListener('touchmove',function(e){
+  if(!activeAdjust)return;
+  syncTouchPoints(e);moveAdjustment();
+  if(e.cancelable)e.preventDefault();
+},{passive:false});
+function endTouch(e){
+  if(!activeAdjust)return;
+  syncTouchPoints(e);guideX=false;guideY=false;snapshotGesture();redraw();
+  if(e.cancelable)e.preventDefault();
+}
+canvas.addEventListener('touchend',endTouch,{passive:false});
+canvas.addEventListener('touchcancel',endTouch,{passive:false});
 canvas.addEventListener('wheel',function(e){if(!activeAdjust||activeAdjust.kind!=='slot')return;var s=slots[activeAdjust.index];if(s.mode!=='image'||!s.img)return;s.zoom=clamp(s.zoom*Math.exp(-e.deltaY*.0025),1,3.5);clampImage(s,rectsFor(W,H)[activeAdjust.index]);var z=document.getElementById('zoom'+activeAdjust.index),zo=document.getElementById('zoomOut'+activeAdjust.index);if(z)z.value=Math.round(s.zoom*100);if(zo)zo.textContent=Math.round(s.zoom*100)+'%';redraw();e.preventDefault();},{passive:false});
 canvas.addEventListener('click',function(e){if(activeAdjust)return;var p=pointerPoint(e),rects=rectsFor(W,H),hit=-1;for(var i=0;i<rects.length;i++){var r=rects[i];if(p.x>=r.x&&p.x<=r.x+r.w&&p.y>=r.y&&p.y<=r.y+r.h){hit=i;break;}}if(hit<0)return;var s=slots[hit];if(s.mode==='image'&&!s.img){var f=document.getElementById('file'+hit);if(f)f.click();}else startAdjust('slot',hit);});
 
